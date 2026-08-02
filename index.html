@@ -210,6 +210,15 @@
         <label class="req">תאריך לידה</label>
         <input type="date" id="birthDate" required>
 
+        <label class="req">גיל</label>
+        <input type="text" id="age" inputmode="numeric" required>
+
+        <label class="req">גובה (ס"מ)</label>
+        <input type="text" id="height" inputmode="numeric" required>
+
+        <label class="req">משקל (ק"ג)</label>
+        <input type="text" id="weight" inputmode="numeric" required>
+
         <label class="req">כתובת מגורים</label>
         <input type="text" id="address" required>
 
@@ -230,6 +239,34 @@
       </section>
 
       <section class="card">
+        <h2>אישור מסלול</h2>
+        <label class="req">איזה מסלול בחרת</label>
+        <div class="yn-choice" id="planConfirmChoice" style="justify-content:flex-start; gap:18px; flex-wrap:wrap;"></div>
+        <div id="planOtherWrap" style="display:none">
+          <label class="req">פרט/י איזה מסלול</label>
+          <input type="text" id="planOther">
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>כושר נוכחי (לא חובה)</h2>
+        <label>מספר חזרות של מתח</label>
+        <input type="text" id="repsPullup" inputmode="numeric">
+        <label>מספר חזרות של מקבילים</label>
+        <input type="text" id="repsDips" inputmode="numeric">
+        <label>מספר חזרות של שכיבות סמיכה</label>
+        <input type="text" id="repsPushup" inputmode="numeric">
+      </section>
+
+      <section class="card">
+        <h2>קצת עליך (לא חובה)</h2>
+        <label>מה העבר שלך באימונים? (ספר/י על עצמך)</label>
+        <textarea id="trainingBackground"></textarea>
+        <label>מה המטרות שלך? (לדוגמא: פרונט לבר, מסת שריר, עמידת ידיים וכדומה)</label>
+        <textarea id="goals"></textarea>
+      </section>
+
+      <section class="card">
         <h2>שאלון בריאות</h2>
         <div id="healthQuestions"></div>
         <div id="healthDetailsWrap" style="display:none">
@@ -244,6 +281,10 @@
         <div class="checkbox-row">
           <input type="checkbox" id="agreeTerms" required>
           <label for="agreeTerms">קראתי, אני מבין/ה ומסכים/ה לתנאי ההצהרה לעיל</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="agreePayment" required>
+          <label for="agreePayment">אני מתחייב/ת לכלל חודשי ותשלומי המסלול</label>
         </div>
       </section>
 
@@ -341,6 +382,27 @@
     plan.months + ' חודשים | ' + plan.price + ' ש"ח לחודש';
   document.getElementById('termsText').textContent = TERMS_TEXT;
   document.title = planKey + ' - רועי שרבי';
+
+  var PLAN_CONFIRM_OPTIONS = ['ארבעה חודשים', 'שישה חודשים', 'אחר'];
+  var defaultConfirm = plan.months === 4 ? 'ארבעה חודשים' : 'שישה חודשים';
+  var planConfirmWrap = document.getElementById('planConfirmChoice');
+  PLAN_CONFIRM_OPTIONS.forEach(function (opt) {
+    var lbl = document.createElement('label');
+    lbl.style.display = 'inline-flex';
+    lbl.style.alignItems = 'center';
+    lbl.style.gap = '4px';
+    lbl.style.margin = '0';
+    lbl.style.fontSize = '13px';
+    lbl.innerHTML = '<input type="radio" name="planConfirm" value="' + opt + '" required' +
+      (opt === defaultConfirm ? ' checked' : '') + '> ' + opt;
+    planConfirmWrap.appendChild(lbl);
+  });
+  planConfirmWrap.addEventListener('change', function () {
+    var checked = document.querySelector('input[name="planConfirm"]:checked');
+    var isOther = checked && checked.value === 'אחר';
+    document.getElementById('planOtherWrap').style.display = isOther ? 'block' : 'none';
+    document.getElementById('planOther').required = isOther;
+  });
 
   var healthWrap = document.getElementById('healthQuestions');
   HEALTH_QUESTIONS.forEach(function (q, i) {
@@ -489,6 +551,9 @@
       fullName: document.getElementById('fullName').value,
       idNumber: idVal,
       birthDate: document.getElementById('birthDate').value,
+      age: document.getElementById('age').value,
+      height: document.getElementById('height').value,
+      weight: document.getElementById('weight').value,
       address: document.getElementById('address').value,
       email: document.getElementById('email').value,
       phone: document.getElementById('phone').value,
@@ -496,6 +561,16 @@
       parentName: document.getElementById('parentName').value,
       parentId: document.getElementById('parentId').value,
       parentPhone: document.getElementById('parentPhone').value,
+      planConfirm: (function () {
+        var c = document.querySelector('input[name="planConfirm"]:checked');
+        if (!c) return '';
+        return c.value === 'אחר' ? document.getElementById('planOther').value : c.value;
+      })(),
+      repsPullup: document.getElementById('repsPullup').value,
+      repsDips: document.getElementById('repsDips').value,
+      repsPushup: document.getElementById('repsPushup').value,
+      trainingBackground: document.getElementById('trainingBackground').value,
+      goals: document.getElementById('goals').value,
       healthAnswers: HEALTH_QUESTIONS.map(function (q, i) {
         var checked = document.querySelector('input[name="hq' + i + '"]:checked');
         return { question: q, answer: checked ? checked.value : '' };

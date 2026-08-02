@@ -24,6 +24,23 @@
       ? '<div class="section-title">פירוט לשאלון הבריאות</div><p>' + data.healthDetails + '</p>'
       : '';
 
+    var fitnessBlock = '';
+    if (data.repsPullup || data.repsDips || data.repsPushup) {
+      fitnessBlock =
+        '<div class="section-title">כושר נוכחי</div>' +
+        (data.repsPullup ? '<div class="row"><span class="label">חזרות מתח</span><span class="value">' + nbsp(data.repsPullup) + '</span></div>' : '') +
+        (data.repsDips ? '<div class="row"><span class="label">חזרות מקבילים</span><span class="value">' + nbsp(data.repsDips) + '</span></div>' : '') +
+        (data.repsPushup ? '<div class="row"><span class="label">חזרות שכיבות סמיכה</span><span class="value">' + nbsp(data.repsPushup) + '</span></div>' : '');
+    }
+
+    var aboutBlock = '';
+    if (data.trainingBackground || data.goals) {
+      aboutBlock =
+        '<div class="section-title">קצת על המתאמן/ת</div>' +
+        (data.trainingBackground ? '<p><b>עבר באימונים:</b> ' + data.trainingBackground + '</p>' : '') +
+        (data.goals ? '<p><b>מטרות:</b> ' + data.goals + '</p>' : '');
+    }
+
     return (
       '<div class="cover">' +
       '  <div class="header">' +
@@ -40,17 +57,23 @@
       '  <div class="row"><span class="label">שם מלא</span><span class="value">' + nbsp(data.fullName) + '</span></div>' +
       '  <div class="row"><span class="label">תעודת זהות</span><span class="value">' + nbsp(data.idNumber) + '</span></div>' +
       '  <div class="row"><span class="label">תאריך לידה</span><span class="value">' + nbsp(data.birthDate) + '</span></div>' +
+      '  <div class="row"><span class="label">גיל</span><span class="value">' + nbsp(data.age) + '</span></div>' +
+      '  <div class="row"><span class="label">גובה</span><span class="value">' + nbsp(data.height + ' ס"מ') + '</span></div>' +
+      '  <div class="row"><span class="label">משקל</span><span class="value">' + nbsp(data.weight + ' ק"ג') + '</span></div>' +
       '  <div class="row"><span class="label">כתובת</span><span class="value">' + nbsp(data.address) + '</span></div>' +
       '  <div class="row"><span class="label">אימייל</span><span class="value">' + nbsp(data.email) + '</span></div>' +
       '  <div class="row"><span class="label">טלפון</span><span class="value">' + nbsp(data.phone) + '</span></div>' +
+      '  <div class="row"><span class="label">מסלול שאושר</span><span class="value">' + nbsp(data.planConfirm) + '</span></div>' +
       minorBlock +
+      fitnessBlock +
+      aboutBlock +
 
       '  <div class="section-title">שאלון בריאות</div>' +
       healthRows +
       healthDetailsBlock +
 
       '  <div class="section-title">הצהרה</div>' +
-      '  <p>המתאמן/ת מאשר/ת כי קרא/ה והבין/ה את הצהרת הבריאות והתקנון המצורפים למסמך זה (בעמודים הבאים), ומסכים/ה לתנאיהם במלואם.</p>' +
+      '  <p>המתאמן/ת מאשר/ת כי קרא/ה והבין/ה את הצהרת הבריאות והתקנון המצורפים למסמך זה (בעמודים הבאים), ומסכים/ה לתנאיהם במלואם. כמו כן, המתאמן/ת מתחייב/ת לכלל חודשי ותשלומי המסלול שנבחר.</p>' +
 
       '  <div class="sig-block">' +
       '    <div class="sig-col">' +
