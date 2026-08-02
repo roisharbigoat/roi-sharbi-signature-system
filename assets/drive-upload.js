@@ -1,6 +1,6 @@
 (function () {
   // מלא כאן את כתובת ה-Web App שתקבל מ-Google Apps Script (Deploy > New deployment > Web app)
-  var DRIVE_ENDPOINT = '';
+  var DRIVE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzfRtnw45EDegTcNcWn7KdNhTYXDerric2X_kZJL1YfyIIpI70ubPPXKRHw31h96z8/exec';
   var WHATSAPP_NUMBER = '972543083373';
 
   function uploadToDrive(payload) {
