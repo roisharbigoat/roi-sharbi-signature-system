@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הצטרפות לליווי - רועי שרבי</title>
+<style>
+  :root {
+    --purple: #6b21a8;
+    --purple-dark: #4c1d7a;
+    --black: #111114;
+    --gray: #6b6b70;
+    --bg: #f7f6fa;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--black);
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+  }
+  body.loading #app { visibility: hidden; }
+
+  .topbar {
+    background: linear-gradient(135deg, var(--black), var(--purple-dark));
+    color: #fff;
+    padding: 22px 20px;
+    text-align: center;
+  }
+  .logo {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+  }
+  .logo img { width: 100%; height: 100%; object-fit: contain; }
+  .topbar h1 { font-size: 18px; margin: 4px 0 0; font-weight: 600; }
+  .topbar .brand { font-size: 13px; opacity: .8; }
+
+  .plan-banner {
+    background: #fff;
+    max-width: 640px;
+    margin: -18px auto 0;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    padding: 16px 20px;
+    text-align: center;
+    border: 1px solid #eee;
+  }
+  .plan-banner .name { color: var(--purple); font-weight: 700; font-size: 17px; }
+  .plan-banner .price { color: var(--gray); font-size: 14px; margin-top: 2px; }
+
+  main {
+    max-width: 640px;
+    margin: 20px auto 60px;
+    padding: 0 16px;
+  }
+  section.card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    border: 1px solid #eee;
+  }
+  section.card h2 {
+    font-size: 16px;
+    color: var(--purple);
+    margin: 0 0 14px;
+    border-bottom: 2px solid var(--bg);
+    padding-bottom: 8px;
+  }
+  label { display: block; font-size: 13px; color: var(--gray); margin: 12px 0 4px; }
+  label.req::after { content: " *"; color: #c0392b; }
+  input[type=text], input[type=email], input[type=tel], input[type=date], textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fcfcfd;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--purple); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .yn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f1f4;
+    gap: 12px;
+  }
+  .yn-row:last-child { border-bottom: none; }
+  .yn-row .q { font-size: 13.5px; flex: 1; }
+  .yn-choice { display: flex; gap: 14px; white-space: nowrap; }
+  .yn-choice label { display: inline-flex; align-items: center; gap: 4px; margin: 0; font-size: 13px; color: var(--black); }
+
+  #minorFields { display: none; border-top: 1px dashed #ddd; margin-top: 12px; padding-top: 12px; }
+
+  .terms-box {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fcfcfd;
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; font-size: 13.5px; }
+  .checkbox-row input { margin-top: 3px; }
+
+  canvas#clientPad {
+    width: 100%;
+    max-width: 100%;
+    height: 180px;
+    background: #fff;
+    border: 2px dashed var(--purple);
+    border-radius: 8px;
+    touch-action: none;
+  }
+  .sig-buttons { display: flex; gap: 10px; margin-top: 10px; }
+  .sig-buttons button { flex: 1; }
+
+  button.primary, .sig-buttons button {
+    padding: 11px 18px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button.primary {
+    width: 100%;
+    background: var(--purple);
+    color: #fff;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+  button.primary:disabled { background: #c9b8e0; cursor: not-allowed; }
+  .sig-buttons button.secondary { background: #eee; color: #333; }
+
+  #msg { margin-top: 12px; font-size: 13.5px; text-align: center; min-height: 18px; }
+  #msg.error { color: #c0392b; }
+  #msg.success { color: #1b8a4a; }
+
+  .error-screen {
+    max-width: 480px;
+    margin: 80px auto;
+    text-align: center;
+    padding: 30px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  }
+  .error-screen h2 { color: #c0392b; }
+
+  .landing { max-width: 480px; margin: 40px auto 60px; padding: 0 16px; text-align: center; }
+  .landing p.intro { color: var(--gray); font-size: 14px; margin-bottom: 22px; }
+  .plan-card {
+    display: block;
+    width: 100%;
+    background: #fff;
+    border: 2px solid #eee;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    text-align: right;
+    font-family: inherit;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    transition: border-color .15s, transform .15s;
+  }
+  .plan-card:hover { border-color: var(--purple); transform: translateY(-2px); }
+  .plan-card .pc-name { color: var(--purple); font-weight: 700; font-size: 17px; }
+  .plan-card .pc-price { color: var(--gray); font-size: 14px; margin-top: 4px; }
+</style>
+</head>
+<body class="loading">
+<div id="app">
+  <div class="topbar">
+    <div class="logo"><img src="assets/logo.png" alt="לוגו רועי שרבי"></div>
+    <div class="brand">רועי שרבי | ליווי קליסטניקס אונליין</div>
+    <h1 id="planTitle">הצטרפות למסלול</h1>
+  </div>
+
+  <div class="plan-banner" id="planBanner">
+    <div class="name" id="planName"></div>
+    <div class="price" id="planPrice"></div>
+  </div>
+
+  <main>
+    <form id="signupForm" novalidate>
+
+      <section class="card">
+        <h2>פרטים אישיים</h2>
+
+        <label class="req">שם מלא</label>
+        <input type="text" id="fullName" required>
+
+        <label class="req">תעודת זהות</label>
+        <input type="text" id="idNumber" inputmode="numeric" maxlength="9" required>
+
+        <label class="req">תאריך לידה</label>
+        <input type="date" id="birthDate" required>
+
+        <label class="req">כתובת מגורים</label>
+        <input type="text" id="address" required>
+
+        <label class="req">אימייל</label>
+        <input type="email" id="email" required>
+
+        <label class="req">טלפון</label>
+        <input type="tel" id="phone" required>
+
+        <div id="minorFields">
+          <label class="req">שם ההורה/אפוטרופוס</label>
+          <input type="text" id="parentName">
+          <label class="req">ת"ז ההורה/אפוטרופוס</label>
+          <input type="text" id="parentId" inputmode="numeric" maxlength="9">
+          <label class="req">טלפון ההורה/אפוטרופוס</label>
+          <input type="tel" id="parentPhone">
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>שאלון בריאות</h2>
+        <div id="healthQuestions"></div>
+        <div id="healthDetailsWrap" style="display:none">
+          <label class="req">אנא פרט/י על התשובות החיוביות</label>
+          <textarea id="healthDetails"></textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>הצהרת בריאות ותקנון</h2>
+        <div class="terms-box" id="termsText">טוען...</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="agreeTerms" required>
+          <label for="agreeTerms">קראתי, אני מבין/ה ומסכים/ה לתנאי ההצהרה לעיל</label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>חתימה</h2>
+        <canvas id="clientPad" width="600" height="200"></canvas>
+        <div class="sig-buttons">
+          <button type="button" class="secondary" id="clearSig">נקה חתימה</button>
+        </div>
+      </section>
+
+      <button type="submit" class="primary" id="submitBtn">שולח... צור מסמך חתום</button>
+      <div id="msg"></div>
+    </form>
+  </main>
+</div>
+
+<script src="assets/html2canvas.min.js" defer></script>
+<script src="assets/jspdf.umd.min.js" defer></script>
+<script src="assets/pdf-lib.min.js" defer></script>
+<script src="assets/drive-upload.js" defer></script>
+<script src="assets/pdf-generator.js" defer></script>
+<script>
+(function () {
+  var PLANS = {
+    'מסלול ליווי 4 חודשים': { months: 4, price: 350 },
+    'מסלול ליווי 6 חודשים': { months: 6, price: 320 }
+  };
+
+  var HEALTH_QUESTIONS = [
+    'האם אמר לך אי פעם רופא שיש לך בעיה בלב וכי עליך לבצע פעילות גופנית רק לפי המלצת רופא?',
+    'האם אתה חש כאבים בחזה בעת ביצוע פעילות גופנית?',
+    'האם חווית כאבים בחזה בחודש האחרון שלא בזמן פעילות גופנית?',
+    'האם קרה שאיבדת שיווי משקל בשל סחרחורת או איבדת הכרה?',
+    'האם יש לך בעיה בעצם או במפרק שעלולה להחמיר כתוצאה מפעילות גופנית?',
+    'האם רופא רשם לך כרגע תרופות (למשל לחץ דם, לב)?',
+    'האם ידועה לך סיבה אחרת שבגללה אסור/לא מומלץ לך לבצע פעילות גופנית?'
+  ];
+
+  var TERMS_TEXT = [
+    'הסכם הצהרת בריאות למתאמנים בליווי קליסטניקס באונליין',
+    '',
+    'הח"י מתחייב/ת כי אני מבין/ה כי התעסוקה באימון פיזי ובפעילויות הגופניות בליווי קליסטניקס באונליין היא פעילות פיזית מאתגרת ועשויה לגרום לפציעות או לתקלות בריאותיות. אני מבין/ה גם כי אני משתתף/ת בפעילויות אלו על דעתי ובסיכון האישי שלי.',
+    '',
+    'בזאת, אני מצהיר/ה כי אני מפטיר/ה את המאמן/ת בליווי קליסטניקס באונליין, מכל אחריות לפציעות או לתקלות בריאותיות שעשויות לגרום לי במהלך האימון.',
+    '',
+    'אני מתחייב/ת לספק מידע רפואי רלוונטי למאמן/ת במידה ויש לי חשש או שאלות בנושא בריאותי בקשר לאימון, וכן לפרט את הסכמי התרופות או הבעיות הבריאותיות שיש לי, ולספק מידע עדכני בנושא זה למאמן/ת.',
+    '',
+    'בהתאם להכרה בסיכון המובנה באימון הגופני בליווי קליסטניקס באונליין, אני מוותר/ת על כל טענה או דרישה משפטית כלפי המאמן/ת בגין פציעות או תקלות בריאותיות שעשויות לגרום לי במהלך האימון.',
+    '',
+    'אני מאשר/ת בזאת שאני מבין/ה כי השתתפותי בליווי תלותית בבדיקה רפואית ובאישור מהרופא במידה ויהיה חשש לכך.',
+    '',
+    'הסכמה זו תהיה בתוקף עד שתוגדר בה הותקנה או בוטלה בכתב.'
+  ].join('\n');
+
+  var qs = new URLSearchParams(location.search);
+  var planKey = qs.get('plan');
+  var plan = PLANS[planKey];
+
+  if (!planKey) {
+    var cards = Object.keys(PLANS).map(function (name) {
+      var p = PLANS[name];
+      return '<button type="button" class="plan-card" data-plan="' + name + '">' +
+        '<div class="pc-name">' + name + '</div>' +
+        '<div class="pc-price">' + p.months + ' חודשים | ' + p.price + ' ש"ח לחודש</div>' +
+        '</button>';
+    }).join('');
+    document.getElementById('app').innerHTML =
+      '<div class="topbar">' +
+      '<div class="logo"><img src="assets/logo.png" alt="לוגו רועי שרבי"></div>' +
+      '<div class="brand">רועי שרבי | ליווי קליסטניקס אונליין</div>' +
+      '<h1>בחר/י מסלול</h1>' +
+      '</div>' +
+      '<div class="landing"><p class="intro">בחר/י את מסלול הליווי שלך כדי להמשיך למילוי הפרטים והחתימה</p>' + cards + '</div>';
+    document.querySelectorAll('.plan-card').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        location.search = '?plan=' + encodeURIComponent(btn.getAttribute('data-plan'));
+      });
+    });
+    document.body.classList.remove('loading');
+    return;
+  }
+
+  if (!plan) {
+    document.getElementById('app').innerHTML =
+      '<div class="error-screen"><h2>קישור לא תקין</h2>' +
+      '<p>הקישור שפתחת אינו מכיל מסלול תקין. אנא בקש/י קישור חדש מרועי.</p></div>';
+    document.body.classList.remove('loading');
+    return;
+  }
+
+  document.getElementById('planTitle').textContent = 'הצטרפות למסלול';
+  document.getElementById('planName').textContent = planKey;
+  document.getElementById('planPrice').textContent =
+    plan.months + ' חודשים | ' + plan.price + ' ש"ח לחודש';
+  document.getElementById('termsText').textContent = TERMS_TEXT;
+  document.title = planKey + ' - רועי שרבי';
+
+  var healthWrap = document.getElementById('healthQuestions');
+  HEALTH_QUESTIONS.forEach(function (q, i) {
+    var row = document.createElement('div');
+    row.className = 'yn-row';
+    row.innerHTML =
+      '<div class="q">' + q + '</div>' +
+      '<div class="yn-choice">' +
+      '<label><input type="radio" name="hq' + i + '" value="לא" required> לא</label>' +
+      '<label><input type="radio" name="hq' + i + '" value="כן"> כן</label>' +
+      '</div>';
+    healthWrap.appendChild(row);
+  });
+  healthWrap.addEventListener('change', function () {
+    var anyYes = HEALTH_QUESTIONS.some(function (_, i) {
+      var checked = document.querySelector('input[name="hq' + i + '"]:checked');
+      return checked && checked.value === 'כן';
+    });
+    var wrap = document.getElementById('healthDetailsWrap');
+    wrap.style.display = anyYes ? 'block' : 'none';
+    document.getElementById('healthDetails').required = anyYes;
+  });
+
+  function isValidIsraeliId(id) {
+    id = String(id || '').trim();
+    if (!/^\d{5,9}$/.test(id)) return false;
+    id = id.padStart(9, '0');
+    var sum = 0;
+    for (var i = 0; i < 9; i++) {
+      var digit = Number(id[i]) * ((i % 2) + 1);
+      if (digit > 9) digit -= 9;
+      sum += digit;
+    }
+    return sum % 10 === 0;
+  }
+
+  var birthInput = document.getElementById('birthDate');
+  var minorFields = document.getElementById('minorFields');
+  var parentInputs = ['parentName', 'parentId', 'parentPhone'];
+  function checkMinor() {
+    if (!birthInput.value) return false;
+    var birth = new Date(birthInput.value);
+    var now = new Date();
+    var age = now.getFullYear() - birth.getFullYear();
+    var m = now.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
+    var isMinor = age < 18;
+    minorFields.style.display = isMinor ? 'block' : 'none';
+    parentInputs.forEach(function (id) {
+      document.getElementById(id).required = isMinor;
+    });
+    return isMinor;
+  }
+  birthInput.addEventListener('change', checkMinor);
+
+  // signature pad
+  var canvas = document.getElementById('clientPad');
+  var ctx = canvas.getContext('2d');
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#000';
+  var drawing = false, hasDrawn = false;
+
+  function getPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    var point = e.touches ? e.touches[0] : e;
+    return { x: (point.clientX - rect.left) * scaleX, y: (point.clientY - rect.top) * scaleY };
+  }
+  function start(e) { drawing = true; hasDrawn = true; var p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }
+  function move(e) { if (!drawing) return; var p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }
+  function end() { drawing = false; }
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+  document.getElementById('clearSig').addEventListener('click', function () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasDrawn = false;
+  });
+
+  var form = document.getElementById('signupForm');
+  var msg = document.getElementById('msg');
+  var submitBtn = document.getElementById('submitBtn');
+  submitBtn.textContent = 'צור מסמך חתום';
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    msg.className = '';
+    msg.textContent = '';
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+    var idVal = document.getElementById('idNumber').value;
+    if (!isValidIsraeliId(idVal)) {
+      msg.className = 'error';
+      msg.textContent = 'תעודת הזהות שהוזנה אינה תקינה, נא לבדוק שוב';
+      return;
+    }
+    if (checkMinor()) {
+      var pid = document.getElementById('parentId').value;
+      if (!isValidIsraeliId(pid)) {
+        msg.className = 'error';
+        msg.textContent = 'תעודת הזהות של ההורה/אפוטרופוס אינה תקינה';
+        return;
+      }
+    }
+    if (!hasDrawn) {
+      msg.className = 'error';
+      msg.textContent = 'נא לחתום לפני שליחה';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    msg.className = '';
+    msg.textContent = 'יוצר מסמך...';
+
+    var data = collectFormData(planKey, plan, idVal, canvas.toDataURL('image/png'));
+    window.__generateSignedPdf(data)
+      .then(function (result) {
+        msg.className = 'success';
+        msg.innerHTML = 'המסמך נוצר בהצלחה! ' + (result.note || '') +
+          '<br><a href="' + window.__whatsappFallbackUrl(data) + '" target="_blank" style="color:#1b8a4a;font-weight:bold;">שלח/י את הקובץ לרועי בוואטסאפ</a>';
+      })
+      .catch(function (err) {
+        console.error(err);
+        msg.className = 'error';
+        msg.textContent = 'משהו השתבש ביצירת המסמך: ' + err.message;
+      })
+      .finally(function () {
+        submitBtn.disabled = false;
+      });
+  });
+
+  function collectFormData(planKey, plan, idVal, signatureDataUrl) {
+    var now = new Date();
+    return {
+      plan: planKey,
+      months: plan.months,
+      price: plan.price,
+      fullName: document.getElementById('fullName').value,
+      idNumber: idVal,
+      birthDate: document.getElementById('birthDate').value,
+      address: document.getElementById('address').value,
+      email: document.getElementById('email').value,
+      phone: document.getElementById('phone').value,
+      isMinor: checkMinor(),
+      parentName: document.getElementById('parentName').value,
+      parentId: document.getElementById('parentId').value,
+      parentPhone: document.getElementById('parentPhone').value,
+      healthAnswers: HEALTH_QUESTIONS.map(function (q, i) {
+        var checked = document.querySelector('input[name="hq' + i + '"]:checked');
+        return { question: q, answer: checked ? checked.value : '' };
+      }),
+      healthDetails: document.getElementById('healthDetails').value,
+      signatureDataUrl: signatureDataUrl,
+      timestamp: now.toLocaleString('he-IL')
+    };
+  }
+
+  document.body.classList.remove('loading');
+})();
+</script>
+</body>
+</html>
