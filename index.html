@@ -192,7 +192,6 @@
 
   <div class="plan-banner" id="planBanner">
     <div class="name" id="planName"></div>
-    <div class="price" id="planPrice"></div>
   </div>
 
   <main>
@@ -349,7 +348,6 @@
       var p = PLANS[name];
       return '<button type="button" class="plan-card" data-plan="' + name + '">' +
         '<div class="pc-name">' + name + '</div>' +
-        '<div class="pc-price">' + p.months + ' חודשים | ' + p.price + ' ש"ח לחודש</div>' +
         '</button>';
     }).join('');
     document.getElementById('app').innerHTML =
@@ -378,8 +376,6 @@
 
   document.getElementById('planTitle').textContent = 'הצטרפות למסלול';
   document.getElementById('planName').textContent = planKey;
-  document.getElementById('planPrice').textContent =
-    plan.months + ' חודשים | ' + plan.price + ' ש"ח לחודש';
   document.getElementById('termsText').textContent = TERMS_TEXT;
   document.title = planKey + ' - רועי שרבי';
 

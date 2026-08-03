@@ -51,7 +51,7 @@
       '    </div>' +
       '  </div>' +
 
-      '  <div class="plan-strip">' + nbsp(data.plan) + ' &nbsp;|&nbsp; ' + nbsp(data.price + ' ש"ח לחודש') + '</div>' +
+      '  <div class="plan-strip">' + nbsp(data.plan) + '</div>' +
 
       '  <div class="section-title">פרטים אישיים</div>' +
       '  <div class="row"><span class="label">שם מלא</span><span class="value">' + nbsp(data.fullName) + '</span></div>' +
