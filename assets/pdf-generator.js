@@ -1,9 +1,9 @@
 (function () {
   var BUSINESS_SIGNATURE_URL = 'assets/business-signature.png';
-  var TERMS_PDF_URL_PREFIX = 'terms/health-declaration.pdf';
+  var RENDER_SCALE = 2;
 
   function nbsp(str) {
-    return String(str || '').replace(/ /g, ' ');
+    return String(str || '').replace(/ /g, ' ');
   }
 
   function buildCoverHtml(data, businessSigDataUrl) {
@@ -72,8 +72,10 @@
       healthRows +
       healthDetailsBlock +
 
-      '  <div class="section-title">הצהרה</div>' +
-      '  <p>המתאמן/ת מאשר/ת כי קרא/ה והבין/ה את הצהרת הבריאות והתקנון המצורפים למסמך זה (בעמודים הבאים), ומסכים/ה לתנאיהם במלואם. כמו כן, המתאמן/ת מתחייב/ת לכלל חודשי ותשלומי המסלול שנבחר.</p>' +
+      '  <div class="section-title">' + nbsp(window.TERMS_TITLE) + '</div>' +
+      window.TERMS_TEXT.split('\n').filter(function (line) { return line.trim(); })
+        .map(function (line) { return '<p>' + line + '</p>'; }).join('') +
+      '  <p>המתאמן/ת מאשר/ת כי קרא/ה והבין/ה את ההצהרה לעיל ומסכים/ה לתנאיה במלואם. כמו כן, המתאמן/ת מתחייב/ת לכלל חודשי ותשלומי המסלול שנבחר.</p>' +
 
       '  <div class="sig-block">' +
       '    <div class="sig-col">' +
@@ -129,7 +131,34 @@
       });
   }
 
-  function renderCoverToPdfBytes(data, businessSigDataUrl) {
+  // Finds the bottom edge (in scaled canvas px) of every text-bearing element,
+  // so page breaks can snap to whitespace between them instead of cutting mid-line.
+  function collectSafeBreakpoints(inner) {
+    var selector = '.row, .hq-row, .section-title, p, .sig-block, .timestamp, .header, .plan-strip';
+    var innerTop = inner.getBoundingClientRect().top;
+    var points = [];
+    inner.querySelectorAll(selector).forEach(function (el) {
+      var rect = el.getBoundingClientRect();
+      points.push(Math.round((rect.bottom - innerTop) * RENDER_SCALE));
+    });
+    points.sort(function (a, b) { return a - b; });
+    return points;
+  }
+
+  // html2canvas can snapshot before <img> tags finish decoding, leaving them
+  // blank (this is what was happening to the logo). Wait for every image first.
+  function waitForImages(container) {
+    var imgs = Array.prototype.slice.call(container.querySelectorAll('img'));
+    return Promise.all(imgs.map(function (img) {
+      if (img.complete) return Promise.resolve();
+      return new Promise(function (resolve) {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    }));
+  }
+
+  function renderCoverPages(data, businessSigDataUrl, pageWidthPt, pageHeightPt) {
     var outer = document.createElement('div');
     outer.style.position = 'fixed';
     outer.style.left = '-10000px';
@@ -149,59 +178,41 @@
 
     document.body.appendChild(outer);
 
-    return window.html2canvas(inner, { scale: 2, useCORS: true })
-      .then(function (canvas) {
-        var jsPDF = window.jspdf.jsPDF;
-        var pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
-        var pageWidth = pdf.internal.pageSize.getWidth();
-        var pageHeight = pdf.internal.pageSize.getHeight();
-        var imgWidth = pageWidth;
-        var imgHeight = (canvas.height * imgWidth) / canvas.width;
+    return waitForImages(inner)
+      .then(function () {
+        var breakpoints = collectSafeBreakpoints(inner);
+        return window.html2canvas(inner, { scale: RENDER_SCALE, useCORS: true })
+          .then(function (canvas) {
+            var imgWidth = pageWidthPt;
+            var pxPerPage = Math.floor((pageHeightPt * canvas.width) / imgWidth);
+            var renderedHeight = 0;
+            var pages = [];
 
-        var pxPerPage = Math.floor((pageHeight * canvas.width) / imgWidth);
-        var renderedHeight = 0;
-        var first = true;
+            while (renderedHeight < canvas.height) {
+              var limit = Math.min(renderedHeight + pxPerPage, canvas.height);
+              var sliceEnd = limit;
+              if (limit < canvas.height) {
+                var best = breakpoints.filter(function (p) { return p > renderedHeight && p <= limit; }).pop();
+                if (best) sliceEnd = best;
+              }
+              var sliceHeight = sliceEnd - renderedHeight;
+              var pageCanvas = document.createElement('canvas');
+              pageCanvas.width = canvas.width;
+              pageCanvas.height = sliceHeight;
+              pageCanvas.getContext('2d').drawImage(
+                canvas, 0, renderedHeight, canvas.width, sliceHeight,
+                0, 0, canvas.width, sliceHeight
+              );
+              pages.push(pageCanvas);
+              renderedHeight = sliceEnd;
+            }
 
-        while (renderedHeight < canvas.height) {
-          var sliceHeight = Math.min(pxPerPage, canvas.height - renderedHeight);
-          var pageCanvas = document.createElement('canvas');
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sliceHeight;
-          pageCanvas.getContext('2d').drawImage(
-            canvas, 0, renderedHeight, canvas.width, sliceHeight,
-            0, 0, canvas.width, sliceHeight
-          );
-          var sliceImgHeight = (sliceHeight * imgWidth) / canvas.width;
-          if (!first) pdf.addPage();
-          pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, imgWidth, sliceImgHeight);
-          renderedHeight += sliceHeight;
-          first = false;
-        }
-
-        return pdf.output('arraybuffer');
+            return pages;
+          });
       })
       .finally(function () {
         document.body.removeChild(outer);
       });
-  }
-
-  function mergeCoverWithTerms(coverBytes, termsBytes) {
-    var PDFDocument = window.PDFLib.PDFDocument;
-    return PDFDocument.load(coverBytes).then(function (coverDoc) {
-      return PDFDocument.load(termsBytes).then(function (termsDoc) {
-        return PDFDocument.create().then(function (merged) {
-          return merged.copyPages(coverDoc, coverDoc.getPageIndices())
-            .then(function (coverPages) {
-              coverPages.forEach(function (p) { merged.addPage(p); });
-              return merged.copyPages(termsDoc, termsDoc.getPageIndices());
-            })
-            .then(function (termsPages) {
-              termsPages.forEach(function (p) { merged.addPage(p); });
-              return merged.save();
-            });
-        });
-      });
-    });
   }
 
   function bytesToBase64(bytes) {
@@ -224,34 +235,43 @@
   }
 
   window.__generateSignedPdf = function (data) {
+    var jsPDF = window.jspdf.jsPDF;
+    var pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+    var pageWidth = pdf.internal.pageSize.getWidth();
+    var pageHeight = pdf.internal.pageSize.getHeight();
+
     return loadImageAsDataUrl(BUSINESS_SIGNATURE_URL)
       .then(function (businessSigDataUrl) {
-        return renderCoverToPdfBytes(data, businessSigDataUrl);
+        return renderCoverPages(data, businessSigDataUrl, pageWidth, pageHeight);
       })
-      .then(function (coverBytes) {
-        return fetch(TERMS_PDF_URL_PREFIX)
-          .then(function (r) { return r.arrayBuffer(); })
-          .then(function (termsBytes) { return mergeCoverWithTerms(coverBytes, termsBytes); });
+      .then(function (allPages) {
+        allPages.forEach(function (canvas, i) {
+          var imgHeight = (canvas.height * pageWidth) / canvas.width;
+          if (i > 0) pdf.addPage();
+          pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageWidth, imgHeight);
+        });
+        return new Uint8Array(pdf.output('arraybuffer'));
       })
       .then(function (mergedBytes) {
         var filename = (data.fullName || 'מתאמן').trim() + ' - ' + data.plan + '.pdf';
-        downloadPdf(mergedBytes, filename);
+        var base64 = bytesToBase64(mergedBytes);
 
-        if (window.__uploadSignedPdf) {
-          var base64 = bytesToBase64(mergedBytes);
-          window.__uploadSignedPdf({
-            pdfBase64: base64,
-            filename: filename,
-            name: data.fullName,
-            id: data.idNumber,
-            track: data.plan,
-            phone: data.phone,
-            email: data.email,
-            time: data.timestamp
-          });
-        }
-
-        return { ok: true, note: 'הקובץ ירד למחשב/לטלפון שלך.' };
+        return window.__uploadSignedPdf({
+          pdfBase64: base64,
+          filename: filename,
+          name: data.fullName,
+          id: data.idNumber,
+          track: data.plan,
+          phone: data.phone,
+          email: data.email,
+          time: data.timestamp
+        }).then(function (uploadResult) {
+          if (uploadResult && uploadResult.ok) {
+            return { ok: true, uploaded: true };
+          }
+          downloadPdf(mergedBytes, filename);
+          return { ok: true, uploaded: false };
+        });
       });
   };
 })();

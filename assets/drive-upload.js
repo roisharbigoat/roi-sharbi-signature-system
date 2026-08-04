@@ -1,45 +1,21 @@
 (function () {
-  // מלא כאן את כתובת ה-Web App שתקבל מ-Google Apps Script (Deploy > New deployment > Web app)
   var DRIVE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzfRtnw45EDegTcNcWn7KdNhTYXDerric2X_kZJL1YfyIIpI70ubPPXKRHw31h96z8/exec';
   var WHATSAPP_NUMBER = '972543083373';
 
   function uploadToDrive(payload) {
-    return new Promise(function (resolve) {
-      if (!DRIVE_ENDPOINT) {
-        resolve({ ok: false, reason: 'no-endpoint' });
-        return;
-      }
-      var iframeName = 'driveSink_' + Date.now();
-      var iframe = document.createElement('iframe');
-      iframe.name = iframeName;
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-
-      var form = document.createElement('form');
-      form.method = 'POST';
-      form.action = DRIVE_ENDPOINT;
-      form.target = iframeName;
-      form.style.display = 'none';
-
-      var input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'payload';
-      input.value = JSON.stringify(payload);
-      form.appendChild(input);
-      document.body.appendChild(form);
-
-      var done = false;
-      function finish(ok) {
-        if (done) return;
-        done = true;
-        form.remove();
-        setTimeout(function () { iframe.remove(); }, 2000);
-        resolve({ ok: ok });
-      }
-      iframe.onload = function () { finish(true); };
-      setTimeout(function () { finish(true); }, 8000);
-      form.submit();
-    });
+    if (!DRIVE_ENDPOINT) {
+      return Promise.resolve({ ok: false, reason: 'no-endpoint' });
+    }
+    // text/plain avoids a CORS preflight (which Apps Script doesn't handle),
+    // while still letting us read the real success/failure response back.
+    return fetch(DRIVE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (json) { return { ok: !!json.ok, url: json.url, error: json.error }; })
+      .catch(function (err) { return { ok: false, error: String(err) }; });
   }
 
   window.__uploadSignedPdf = function (payload) {

@@ -303,7 +303,7 @@
 
 <script src="assets/html2canvas.min.js" defer></script>
 <script src="assets/jspdf.umd.min.js" defer></script>
-<script src="assets/pdf-lib.min.js" defer></script>
+<script src="assets/terms-text.js" defer></script>
 <script src="assets/drive-upload.js" defer></script>
 <script src="assets/pdf-generator.js" defer></script>
 <script>
@@ -322,22 +322,6 @@
     'האם רופא רשם לך כרגע תרופות (למשל לחץ דם, לב)?',
     'האם ידועה לך סיבה אחרת שבגללה אסור/לא מומלץ לך לבצע פעילות גופנית?'
   ];
-
-  var TERMS_TEXT = [
-    'הסכם הצהרת בריאות למתאמנים בליווי קליסטניקס באונליין',
-    '',
-    'הח"י מתחייב/ת כי אני מבין/ה כי התעסוקה באימון פיזי ובפעילויות הגופניות בליווי קליסטניקס באונליין היא פעילות פיזית מאתגרת ועשויה לגרום לפציעות או לתקלות בריאותיות. אני מבין/ה גם כי אני משתתף/ת בפעילויות אלו על דעתי ובסיכון האישי שלי.',
-    '',
-    'בזאת, אני מצהיר/ה כי אני מפטיר/ה את המאמן/ת בליווי קליסטניקס באונליין, מכל אחריות לפציעות או לתקלות בריאותיות שעשויות לגרום לי במהלך האימון.',
-    '',
-    'אני מתחייב/ת לספק מידע רפואי רלוונטי למאמן/ת במידה ויש לי חשש או שאלות בנושא בריאותי בקשר לאימון, וכן לפרט את הסכמי התרופות או הבעיות הבריאותיות שיש לי, ולספק מידע עדכני בנושא זה למאמן/ת.',
-    '',
-    'בהתאם להכרה בסיכון המובנה באימון הגופני בליווי קליסטניקס באונליין, אני מוותר/ת על כל טענה או דרישה משפטית כלפי המאמן/ת בגין פציעות או תקלות בריאותיות שעשויות לגרום לי במהלך האימון.',
-    '',
-    'אני מאשר/ת בזאת שאני מבין/ה כי השתתפותי בליווי תלותית בבדיקה רפואית ובאישור מהרופא במידה ויהיה חשש לכך.',
-    '',
-    'הסכמה זו תהיה בתוקף עד שתוגדר בה הותקנה או בוטלה בכתב.'
-  ].join('\n');
 
   var qs = new URLSearchParams(location.search);
   var planKey = qs.get('plan');
@@ -376,7 +360,7 @@
 
   document.getElementById('planTitle').textContent = 'הצטרפות למסלול';
   document.getElementById('planName').textContent = planKey;
-  document.getElementById('termsText').textContent = TERMS_TEXT;
+  document.getElementById('termsText').textContent = window.TERMS_TEXT;
   document.title = planKey + ' - רועי שרבי';
 
   var PLAN_CONFIRM_OPTIONS = ['ארבעה חודשים', 'שישה חודשים', 'אחר'];
@@ -525,8 +509,13 @@
     window.__generateSignedPdf(data)
       .then(function (result) {
         msg.className = 'success';
-        msg.innerHTML = 'המסמך נוצר בהצלחה! ' + (result.note || '') +
-          '<br><a href="' + window.__whatsappFallbackUrl(data) + '" target="_blank" style="color:#1b8a4a;font-weight:bold;">שלח/י את הקובץ לרועי בוואטסאפ</a>';
+        if (result.uploaded) {
+          msg.textContent = 'תודה רבה! הטופס נשלח בהצלחה.';
+          form.style.display = 'none';
+        } else {
+          msg.innerHTML = 'תודה רבה! היה בעיה בשליחה האוטומטית - הקובץ ירד למכשיר שלך.' +
+            '<br><a href="' + window.__whatsappFallbackUrl(data) + '" target="_blank" style="color:#1b8a4a;font-weight:bold;">נא לשלוח אותו לרועי בוואטסאפ</a>';
+        }
       })
       .catch(function (err) {
         console.error(err);
