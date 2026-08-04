@@ -72,7 +72,7 @@
       healthRows +
       healthDetailsBlock +
 
-      '  <div class="section-title">' + nbsp(window.TERMS_TITLE) + '</div>' +
+      '  <div class="section-title" id="terms-section">' + nbsp(window.TERMS_TITLE) + '</div>' +
       window.TERMS_TEXT.split('\n').filter(function (line) { return line.trim(); })
         .map(function (line) { return '<p>' + line + '</p>'; }).join('') +
       '  <p>המתאמן/ת מאשר/ת כי קרא/ה והבין/ה את ההצהרה לעיל ומסכים/ה לתנאיה במלואם. כמו כן, המתאמן/ת מתחייב/ת לכלל חודשי ותשלומי המסלול שנבחר.</p>' +
@@ -145,6 +145,18 @@
     return points;
   }
 
+  // The terms/declaration section always starts on a fresh page, so its
+  // heading is never left dangling at the bottom of the previous page.
+  function collectForcedBreaks(inner) {
+    var innerTop = inner.getBoundingClientRect().top;
+    var points = [];
+    inner.querySelectorAll('#terms-section').forEach(function (el) {
+      var rect = el.getBoundingClientRect();
+      points.push(Math.round((rect.top - innerTop) * RENDER_SCALE));
+    });
+    return points;
+  }
+
   // html2canvas can snapshot before <img> tags finish decoding, leaving them
   // blank (this is what was happening to the logo). Wait for every image first.
   function waitForImages(container) {
@@ -181,6 +193,7 @@
     return waitForImages(inner)
       .then(function () {
         var breakpoints = collectSafeBreakpoints(inner);
+        var forcedBreaks = collectForcedBreaks(inner);
         return window.html2canvas(inner, { scale: RENDER_SCALE, useCORS: true })
           .then(function (canvas) {
             var imgWidth = pageWidthPt;
@@ -190,11 +203,14 @@
 
             while (renderedHeight < canvas.height) {
               var limit = Math.min(renderedHeight + pxPerPage, canvas.height);
+              var forcedInRange = forcedBreaks.filter(function (p) { return p > renderedHeight && p < limit; })[0];
+              if (forcedInRange) limit = forcedInRange;
               var sliceEnd = limit;
               if (limit < canvas.height) {
                 var best = breakpoints.filter(function (p) { return p > renderedHeight && p <= limit; }).pop();
                 if (best) sliceEnd = best;
               }
+              if (forcedInRange) sliceEnd = forcedInRange;
               var sliceHeight = sliceEnd - renderedHeight;
               var pageCanvas = document.createElement('canvas');
               pageCanvas.width = canvas.width;
