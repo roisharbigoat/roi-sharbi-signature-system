@@ -2,6 +2,7 @@
   var BUSINESS_SIGNATURE_URL = 'assets/business-signature.png';
   var LOGO_URL = 'assets/logo.png';
   var RENDER_SCALE = 2;
+  var FOOTER_RESERVE_PT = 40;
 
   function nbsp(str) {
     return String(str || '').replace(/ /g, ' ');
@@ -99,29 +100,29 @@
   }
 
   var COVER_CSS = (
-    '.cover { direction: rtl; font-family: Arial, Helvetica, sans-serif; color: #111; word-spacing: 1.4px; padding: 28px; }' +
-    '.cover .header { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #6b21a8; padding-bottom: 12px; margin-bottom: 16px; }' +
-    '.cover .logo { width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px; }' +
+    '.cover { direction: rtl; font-family: Arial, Helvetica, sans-serif; color: #111; word-spacing: 1.4px; padding: 20px; }' +
+    '.cover .header { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #6b21a8; padding-bottom: 8px; margin-bottom: 10px; }' +
+    '.cover .logo { width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 3px; }' +
     '.cover .logo img { width: 100%; height: 100%; object-fit: contain; }' +
-    '.cover .biz-name { font-weight: bold; font-size: 15px; }' +
-    '.cover .doc-title { font-size: 13px; color: #555; margin-top: 2px; }' +
-    '.cover .plan-strip { background: #f3ecfa; color: #6b21a8; font-weight: bold; padding: 8px 12px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; }' +
-    '.cover .section-title { font-weight: bold; color: #6b21a8; font-size: 14px; margin: 16px 0 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }' +
-    '.cover .row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 4px 0; border-bottom: 1px dotted #eee; }' +
+    '.cover .biz-name { font-weight: bold; font-size: 12.5px; }' +
+    '.cover .doc-title { font-size: 10px; color: #555; margin-top: 1px; }' +
+    '.cover .plan-strip { background: #f3ecfa; color: #6b21a8; font-weight: bold; padding: 5px 10px; border-radius: 5px; margin-bottom: 10px; font-size: 10.5px; }' +
+    '.cover .section-title { font-weight: bold; color: #6b21a8; font-size: 11px; margin: 9px 0 4px; border-bottom: 1px solid #eee; padding-bottom: 2px; }' +
+    '.cover .row { display: flex; justify-content: space-between; font-size: 9.5px; padding: 2px 0; border-bottom: 1px dotted #eee; }' +
     '.cover .row .label { color: #666; font-weight: bold; }' +
-    '.cover .hq-row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; }' +
-    '.cover .hq-q { flex: 1; padding-left: 10px; }' +
+    '.cover .hq-row { display: flex; justify-content: space-between; font-size: 9px; padding: 1.5px 0; }' +
+    '.cover .hq-q { flex: 1; padding-left: 8px; }' +
     '.cover .hq-a { font-weight: bold; }' +
-    '.cover p { font-size: 12.5px; line-height: 1.6; }' +
+    '.cover p { font-size: 9.5px; line-height: 1.35; margin: 4px 0; }' +
     '.cover .terms-block { text-align: center; margin: 0 auto; }' +
     '.cover .terms-block .section-title { text-align: center; border-bottom: 1px solid #eee; }' +
     '.cover .terms-block p { text-align: center; }' +
-    '.cover .sig-block { display: flex; gap: 20px; margin-top: 20px; }' +
-    '.cover .sig-col { flex: 1; text-align: center; border: 1px solid #eee; border-radius: 8px; padding: 10px; }' +
-    '.cover .sig-caption { font-size: 11px; color: #888; margin-bottom: 6px; }' +
-    '.cover .sig-img { max-width: 100%; height: 60px; object-fit: contain; }' +
-    '.cover .sig-name { font-size: 12px; font-weight: bold; margin-top: 6px; }' +
-    '.cover .timestamp { text-align: center; font-size: 11px; color: #888; margin-top: 18px; }'
+    '.cover .sig-block { display: flex; gap: 14px; margin-top: 10px; }' +
+    '.cover .sig-col { flex: 1; text-align: center; border: 1px solid #eee; border-radius: 6px; padding: 6px; }' +
+    '.cover .sig-caption { font-size: 8.5px; color: #888; margin-bottom: 4px; }' +
+    '.cover .sig-img { max-width: 100%; height: 38px; object-fit: contain; }' +
+    '.cover .sig-name { font-size: 9.5px; font-weight: bold; margin-top: 4px; }' +
+    '.cover .timestamp { text-align: center; font-size: 8.5px; color: #888; margin-top: 8px; }'
   );
 
   function loadImageAsDataUrl(url) {
@@ -203,7 +204,7 @@
         return window.html2canvas(inner, { scale: RENDER_SCALE, useCORS: true })
           .then(function (canvas) {
             var imgWidth = pageWidthPt;
-            var pxPerPage = Math.floor((pageHeightPt * canvas.width) / imgWidth);
+            var pxPerPage = Math.floor(((pageHeightPt - FOOTER_RESERVE_PT) * canvas.width) / imgWidth);
             var renderedHeight = 0;
             var pages = [];
 
