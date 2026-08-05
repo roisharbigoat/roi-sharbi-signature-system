@@ -1,5 +1,6 @@
 (function () {
   var BUSINESS_SIGNATURE_URL = 'assets/business-signature.png';
+  var LOGO_URL = 'assets/logo.png';
   var RENDER_SCALE = 2;
 
   function nbsp(str) {
@@ -72,9 +73,11 @@
       healthRows +
       healthDetailsBlock +
 
-      '  <div class="section-title" id="terms-section">' + nbsp(window.TERMS_TITLE) + '</div>' +
+      '  <div class="terms-block" id="terms-section">' +
+      '    <div class="section-title">' + nbsp(window.TERMS_TITLE) + '</div>' +
       window.TERMS_TEXT.split('\n').filter(function (line) { return line.trim(); })
         .map(function (line) { return '<p>' + line + '</p>'; }).join('') +
+      '  </div>' +
       '  <p>המתאמן/ת מאשר/ת כי קרא/ה והבין/ה את ההצהרה לעיל ומסכים/ה לתנאיה במלואם. כמו כן, המתאמן/ת מתחייב/ת לכלל חודשי ותשלומי המסלול שנבחר.</p>' +
 
       '  <div class="sig-block">' +
@@ -110,6 +113,9 @@
     '.cover .hq-q { flex: 1; padding-left: 10px; }' +
     '.cover .hq-a { font-weight: bold; }' +
     '.cover p { font-size: 12.5px; line-height: 1.6; }' +
+    '.cover .terms-block { text-align: center; margin: 0 auto; }' +
+    '.cover .terms-block .section-title { text-align: center; border-bottom: 1px solid #eee; }' +
+    '.cover .terms-block p { text-align: center; }' +
     '.cover .sig-block { display: flex; gap: 20px; margin-top: 20px; }' +
     '.cover .sig-col { flex: 1; text-align: center; border: 1px solid #eee; border-radius: 8px; padding: 10px; }' +
     '.cover .sig-caption { font-size: 11px; color: #888; margin-bottom: 6px; }' +
@@ -256,15 +262,25 @@
     var pageWidth = pdf.internal.pageSize.getWidth();
     var pageHeight = pdf.internal.pageSize.getHeight();
 
-    return loadImageAsDataUrl(BUSINESS_SIGNATURE_URL)
-      .then(function (businessSigDataUrl) {
-        return renderCoverPages(data, businessSigDataUrl, pageWidth, pageHeight);
+    return Promise.all([
+      loadImageAsDataUrl(BUSINESS_SIGNATURE_URL),
+      loadImageAsDataUrl(LOGO_URL)
+    ])
+      .then(function (urls) {
+        var businessSigDataUrl = urls[0];
+        var logoDataUrl = urls[1];
+        return renderCoverPages(data, businessSigDataUrl, pageWidth, pageHeight)
+          .then(function (allPages) { return { allPages: allPages, logoDataUrl: logoDataUrl }; });
       })
-      .then(function (allPages) {
-        allPages.forEach(function (canvas, i) {
+      .then(function (result) {
+        var logoSize = 20;
+        var logoX = 24;
+        var logoY = pageHeight - logoSize - 16;
+        result.allPages.forEach(function (canvas, i) {
           var imgHeight = (canvas.height * pageWidth) / canvas.width;
           if (i > 0) pdf.addPage();
           pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageWidth, imgHeight);
+          pdf.addImage(result.logoDataUrl, 'PNG', logoX, logoY, logoSize, logoSize);
         });
         return new Uint8Array(pdf.output('arraybuffer'));
       })
