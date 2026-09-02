@@ -7,7 +7,10 @@
   // Roi retyping the trainee's name
   var GENERATOR_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzMPub17KYUYxeL3NN1tijAkVZHtQHQJMyDbb5ppVOB06bY7fV6VdGAnSRCCB56Sqekig/exec';
 
-  function uploadToDrive(payload) {
+  function delay(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+
+  function uploadToDrive(payload, attempt) {
+    attempt = attempt || 1;
     if (!DRIVE_ENDPOINT) {
       return Promise.resolve({ ok: false, reason: 'no-endpoint' });
     }
@@ -20,7 +23,17 @@
     })
       .then(function (res) { return res.json(); })
       .then(function (json) { return { ok: !!json.ok, url: json.url, error: json.error }; })
-      .catch(function (err) { return { ok: false, error: String(err) }; });
+      .catch(function (err) {
+        // Apps Script keeps running server-side once triggered, independent
+        // of whether the client is still connected - a slow/cold response or
+        // a flaky mobile connection can make an upload that actually
+        // SUCCEEDED look like a failure here. One silent retry (safe: same
+        // filename just replaces the same file again, never duplicates)
+        // catches that before ever bothering the trainee with the manual
+        // WhatsApp fallback for something that already worked
+        if (attempt < 2) return delay(1500).then(function () { return uploadToDrive(payload, attempt + 1); });
+        return { ok: false, error: String(err) };
+      });
   }
 
   window.__uploadSignedPdf = function (payload) {
