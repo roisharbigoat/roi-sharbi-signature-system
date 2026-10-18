@@ -4,8 +4,14 @@
   var RENDER_SCALE = 2;
   var FOOTER_RESERVE_PT = 40;
 
+  // every field below is user-typed free text spliced directly into an HTML
+  // string for html2canvas to rasterize - without escaping, a trainee typing
+  // a stray '<' or '&' (plausible in a free-text "goals"/"background" answer)
+  // corrupts the HTML structure being rendered, which can silently mangle or
+  // fail the whole cover page. (name kept as-is even though its original
+  // space-replace was a no-op - every call site already uses it)
   function nbsp(str) {
-    return String(str || '').replace(/ /g, ' ');
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function buildCoverHtml(data, businessSigDataUrl) {
@@ -23,7 +29,7 @@
     }
 
     var healthDetailsBlock = data.healthDetails
-      ? '<div class="section-title">פירוט לשאלון הבריאות</div><p>' + data.healthDetails + '</p>'
+      ? '<div class="section-title">פירוט לשאלון הבריאות</div><p>' + nbsp(data.healthDetails) + '</p>'
       : '';
 
     var fitnessBlock = '';
@@ -39,8 +45,8 @@
     if (data.trainingBackground || data.goals) {
       aboutBlock =
         '<div class="section-title">קצת על המתאמן/ת</div>' +
-        (data.trainingBackground ? '<p><b>עבר באימונים:</b> ' + data.trainingBackground + '</p>' : '') +
-        (data.goals ? '<p><b>מטרות:</b> ' + data.goals + '</p>' : '');
+        (data.trainingBackground ? '<p><b>עבר באימונים:</b> ' + nbsp(data.trainingBackground) + '</p>' : '') +
+        (data.goals ? '<p><b>מטרות:</b> ' + nbsp(data.goals) + '</p>' : '');
     }
 
     return (
